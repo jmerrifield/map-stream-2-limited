@@ -2,45 +2,49 @@ var through = require('through2')
 
 module.exports = function (asyncFn, initialLimit) {
   var current = 0
-  var cbCount = 0
-  var outstandingCallbacks = []
-  var onFlush = function () { }
+  var callbacks = []
+  var onEmpty = function () { }
   var limit = initialLimit
 
-  function maybeCb(callback) {
+  // There's no straightforward way to request a new chunk of data given the
+  // underlying Writeable API - we're supposed to call the callback supplied
+  // *with each chunk* to signal that we're ready for the next one.
+  // Do some lying here and maintain a pool of all callbacks that we can
+  // just pop off and invoke to signal that we're ready for another chunk.
+  function requestNextChunk() {
     if (current === limit) return
-    if (cbCount > 0) {
-      cbCount--
-      outstandingCallbacks.splice(outstandingCallbacks.indexOf(callback, 1))
-      callback()
-    }
-  }
-  var stream = through.obj(function (chunk, enc, callback) {
-    outstandingCallbacks.push(callback)
+    if (callbacks.length === 0) return
 
+    var cb = callbacks.pop()
+    cb.apply(this)
+  }
+
+  var stream = through.obj(function (chunk, enc, callback) {
     asyncFn(chunk, function (err, result) {
       current--
       if (err) return this.emit('error', err)
+
       this.push(result)
-      maybeCb(callback)
-      if (current === 0) onFlush()
+      requestNextChunk()
+
+      if (current === 0) onEmpty()
     }.bind(this))
 
-    cbCount++
-    if (++current < limit) maybeCb(callback)
+    callbacks.push(callback)
+    current++
+    requestNextChunk()
   }, function (callback) {
-    onFlush = callback
+    onEmpty = callback
   })
 
   stream.changeLimit = function (modifier) {
     var oldLimit = limit
     limit = modifier(limit)
 
-    var diff = limit - oldLimit
-    var numNewItemsToAccept = Math.max(0, diff)
+    var numNewItemsToAccept = Math.max(0, limit - oldLimit)
 
     for (var i = 0; i < numNewItemsToAccept; i++) {
-      maybeCb(outstandingCallbacks[0])
+      requestNextChunk()
     }
   }
 
