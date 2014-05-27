@@ -4,9 +4,9 @@
 [![Build Status](https://travis-ci.org/jmerrifield/map-stream-2-limited.svg?branch=master)](https://travis-ci.org/jmerrifield/map-stream-2-limited)
 
 Limited concurrency `map-stream` implementation. Inspired by
-[map-stream-limit](https://github.com/parshap/map-stream-limit)
-but built on `through2` and additionally allows the concurrency to be changed
-after instantiation.
+[map-stream-limit](https://github.com/parshap/map-stream-limit) but built on
+[through2](https://github.com/rvagg/through2) and additionally allows the
+concurrency to be changed after instantiation.
 
 Somewhat experimental and likely to be caught out by edge cases...
 
