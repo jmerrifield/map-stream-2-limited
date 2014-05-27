@@ -1,5 +1,8 @@
 # map-stream-2-limited
 
+[![NPM version](https://badge.fury.io/js/map-stream-2-limited.svg)](http://badge.fury.io/js/map-stream-2-limited)
+[![Build Status](https://travis-ci.org/jmerrifield/map-stream-2-limited.svg?branch=master)](https://travis-ci.org/jmerrifield/map-stream-2-limited)
+
 Limited concurrency `map-stream` implementation. Inspired by
 [map-stream-limit](https://github.com/parshap/map-stream-limit)
 but built on `through2` and additionally allows the concurrency to be changed
